@@ -1,8 +1,7 @@
 package io.github.sebastiankirsch.aoc2024
 
 fun main() {
-    val lines = linesFromInputOf(object {}.javaClass)
-    val chars = lines.map { it.toCharArray() }.toTypedArray()
+    val chars = charsArrayFromInputOf(object {}.javaClass)
 
     println("XMASes: ${Day4(chars).findXmases()}")
     println("X_MASes: ${Day4(chars).findXXmases()}")
@@ -98,9 +97,7 @@ class Day4(val chars: Array<CharArray>) {
     }
 
     private fun charAt(x: Int, y: Int): Char? {
-        if (x < 0 || y < 0 || y >= chars.size || x >= chars[0].size)
-            return null
-        return chars[y][x]
+        return charAt(chars, x, y)
     }
 
 }

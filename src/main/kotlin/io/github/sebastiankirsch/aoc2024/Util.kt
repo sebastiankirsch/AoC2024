@@ -13,3 +13,13 @@ fun linesFromInputOf(clazz: Class<*>): List<String> {
     while (scanner.hasNextLine()) lines.add(scanner.nextLine())
     return lines
 }
+
+fun charsArrayFromInputOf(clazz: Class<*>): Array<CharArray> {
+    return linesFromInputOf(clazz).map { it.toCharArray() }.toTypedArray()
+}
+
+fun charAt(chars: Array<CharArray>, x: Int, y: Int): Char? {
+    if (x < 0 || y < 0 || y >= chars.size || x >= chars[0].size)
+        return null
+    return chars[y][x]
+}
