@@ -1,3 +1,6 @@
+# AoC doesn't want the input to be published
+src/main/resources/Day*.txt
+
 #Maven
 target/
 
