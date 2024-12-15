@@ -13,8 +13,24 @@ fun main() {
     }
     val commands =
         chars.filterIndexed { i, _ -> i > warehouse.size }.flatMap { it.asIterable() }
+    println("Read ${commands.size} commands")
 
     Day15(warehouse, commands).calculateGps()
+    Day15(widenWarehouse(warehouse), commands).calculateGps()
+}
+
+fun widenWarehouse(chars: Array<CharArray>): Array<CharArray> {
+    return chars.map {
+        it.joinToString("") {
+            when (it) {
+                '#' -> "##"
+                '.' -> ".."
+                'O' -> "[]"
+                '@' -> "@."
+                else -> throw RuntimeException()
+            }
+        }.toCharArray()
+    }.toTypedArray()
 }
 
 class Day15(chars: Array<CharArray>, val commands: List<Char>) : CharMap(chars) {
@@ -28,8 +44,8 @@ class Day15(chars: Array<CharArray>, val commands: List<Char>) : CharMap(chars) 
         var gpsSum = 0
         for (y in chars.indices) {
             for (x in chars[y].indices) {
-                if (chars[y][x] != 'O') continue
-                gpsSum += y * 100 + x
+                val char = chars[y][x]
+                if (char == 'O' || char == '[') gpsSum += y * 100 + x
             }
         }
         println("GPS sum is $gpsSum")
@@ -38,14 +54,33 @@ class Day15(chars: Array<CharArray>, val commands: List<Char>) : CharMap(chars) 
 
     private fun move(
         point: Pair<Int, Int>,
-        direction: Direction
+        direction: Direction,
+        revertMoves: MutableList<Pair<Int, Int>> = mutableListOf()
     ): Boolean {
         val target = direction.target(point)
         var movePossible = false
-        when (charAt(target)) {
+        when (val c = charAt(target)) {
             '#' -> return false
             'O' -> movePossible = move(target, direction)
             '.' -> movePossible = true
+            '[', ']' -> {
+                if (direction.horizontal) {
+                    movePossible = move(target, direction)
+                } else {
+                    if (move(target, direction, revertMoves)) {
+                        revertMoves.add(target)
+                        val otherBoxPart = target.first + (if (c == '[') 1 else -1) to target.second
+                        if (move(otherBoxPart, direction, revertMoves)) {
+                            revertMoves.add(otherBoxPart)
+                            movePossible = true
+                        } else {
+                            revertMoves.reversed().forEach { swapChars(it, direction.target(it)) }
+                            revertMoves.clear()
+                        }
+                    }
+                }
+            }
+
             else -> throw RuntimeException()
         }
         if (movePossible) swapChars(point, target)
@@ -59,11 +94,11 @@ class Day15(chars: Array<CharArray>, val commands: List<Char>) : CharMap(chars) 
     }
 
 
-    enum class Direction(val move: UnaryOperator<Pair<Int, Int>>) {
-        NORTH({ pair -> pair.first to pair.second - 1 }),
-        SOUTH({ pair -> pair.first to pair.second + 1 }),
-        WEST({ pair -> pair.first - 1 to pair.second }),
-        EAST({ pair -> pair.first + 1 to pair.second });
+    enum class Direction(val horizontal: Boolean, val move: UnaryOperator<Pair<Int, Int>>) {
+        NORTH(false, { pair -> pair.first to pair.second - 1 }),
+        SOUTH(false, { pair -> pair.first to pair.second + 1 }),
+        WEST(true, { pair -> pair.first - 1 to pair.second }),
+        EAST(true, { pair -> pair.first + 1 to pair.second });
 
         fun target(field: Pair<Int, Int>): Pair<Int, Int> {
             return move.apply(field)
