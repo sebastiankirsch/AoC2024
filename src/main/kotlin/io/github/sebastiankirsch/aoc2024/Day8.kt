@@ -4,10 +4,11 @@ fun main() {
     val chars = charsArrayFromInputOf(object {}.javaClass)
 
     Day8(chars).calculatePathAndObstacles()
+    Day8(chars).calculatePathAndObstaclesWithResonance()
 }
 
 class Day8(private val chars: Array<CharArray>) {
-    fun calculatePathAndObstacles() {
+    fun calculatePathAndObstacles(): Int {
         val antennasByFrequency = findAntennas()
         val antiNodes = mutableSetOf<Pair<Int, Int>>()
         antennasByFrequency.values.forEach { antennas ->
@@ -22,6 +23,34 @@ class Day8(private val chars: Array<CharArray>) {
             }
         }
         println("# of anti-nodes: ${antiNodes.size}")
+        return antiNodes.size
+    }
+
+    fun calculatePathAndObstaclesWithResonance(): Int {
+        val antennasByFrequency = findAntennas()
+        val antiNodes = mutableSetOf<Pair<Int, Int>>()
+        antennasByFrequency.values.forEach { antennas ->
+            antennas.forEach { antenna ->
+                antennas.forEach { otherAntenna ->
+                    if (antenna != otherAntenna) {
+                        var i = 0
+                        while(true) {
+                            i++
+                            val point =
+                                (antenna.first + i * (otherAntenna.first - antenna.first)) to (antenna.second + i * (otherAntenna.second - antenna.second))
+                            if (charAt(point) == null) {
+                                break
+                            } else {
+                                println("${charAt(antenna)} ${antenna}x$otherAntenna : found anti-node $point ")
+                                antiNodes.add(point)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println("# of harmonic anti-nodes: ${antiNodes.size}")
+        return antiNodes.size
     }
 
     private fun findAntennas(): Map<Char, List<Pair<Int, Int>>> {
