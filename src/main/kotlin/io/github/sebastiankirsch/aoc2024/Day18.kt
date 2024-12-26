@@ -12,15 +12,35 @@ fun main() {
         points
     }
 
-    val memory = Array(71) { CharArray(71) { '.' } }
-    fallingBytes.subList(0, 1024).forEach { memory[it.second][it.first] = '#' }
+    Day18(memoryMap(fallingBytes, 1024)).doStuff()
 
-    Day18(memory).doStuff()
+    val firstBadByte = fallingBytes[bisect(fallingBytes)]
+    println("First bad byte is $firstBadByte")
+}
+
+fun bisect(fallingBytes: List<Pair<Int, Int>>): Int {
+    var goodIndex = 0
+    var badIndex = fallingBytes.size
+    do {
+        val nextCandidate = goodIndex + (badIndex - goodIndex) / 2
+        if (Day18(memoryMap(fallingBytes, nextCandidate)).doStuff() == null) {
+            badIndex = nextCandidate
+        } else {
+            goodIndex = nextCandidate
+        }
+    } while (badIndex - goodIndex > 1)
+    return badIndex - 1
+}
+
+private fun memoryMap(fallingBytes: List<Pair<Int, Int>>, numberOfBytes: Int): Array<CharArray> {
+    val memory = Array(71) { CharArray(71) { '.' } }
+    fallingBytes.subList(0, numberOfBytes).forEach { memory[it.second][it.first] = '#' }
+    return memory
 }
 
 class Day18(chars: Array<CharArray>) : CharMap(chars) {
     fun doStuff(): Int? {
-        chars.forEach(::println)
+        //chars.forEach(::println)
         val minDistance = dijkstra(0 to 0, chars[0].size - 1 to chars.size - 1)
         println("Minimum distance is $minDistance")
         return minDistance
@@ -49,27 +69,3 @@ class Day18(chars: Array<CharArray>) : CharMap(chars) {
             .forEach { doDijkstra(it, distance + 1, target, visitedPoints) }
     }
 }
-
-
-fun findShortestPath(
-    path: List<Int>,
-    vertexes: Map<Int, Set<Int>>,
-    knownTiles: List<Set<Int>> = emptyList(),
-    shortestPath: List<Int>? = null
-): List<Int>? {
-    shortestPath?.let { if (it.size <= path.size) return it }
-    var newShortestPath: List<Int>? = shortestPath
-    vertexes.getOrElse(path.last()) { emptySet() }.forEach { nextNode ->
-        if (knownTiles.none { path.containsAll(it) }) {
-            if (path.size > 2 && nextNode == path.first()) {
-                newShortestPath = shortestPath(newShortestPath, path)
-            } else if (!path.contains(nextNode)) {
-                newShortestPath = findShortestPath(path.plus(nextNode), vertexes, knownTiles, newShortestPath)
-            }
-        }
-    }
-    return newShortestPath
-}
-
-private fun shortestPath(shortestPath: List<Int>?, candidate: List<Int>) =
-    if (shortestPath == null || shortestPath.size > candidate.size) candidate else shortestPath
